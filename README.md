@@ -16,6 +16,16 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Supabase Setup
+
+Set `NEXT_PUBLIC_SUPABASE_URL` and either `NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` using the project URL and public key from Supabase. These public client credentials are not service-role secrets. Restart the dev server after changing them.
+
+Apply the SQL migration in `supabase/migrations` to create the row-protected `profiles` table and the auth-user profile trigger.
+
+For production, enable CAPTCHA and configure auth rate limits in Supabase Auth settings. To enable Cloudflare Turnstile on password sign-in, signup, and confirmation resend, set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and configure the matching Turnstile secret in Supabase Auth. The public site key is safe to expose; never expose the Turnstile secret or a Supabase service-role/secret key.
+
+Supabase Auth performs server-side email and password validation. The profile migration applies a database length constraint and own-row RLS policies. This repository defines only `profiles`; review every other table in the live database and enable RLS with table-specific policies. `@supabase/ssr` manages auth cookies, but XSS prevention is still required because script execution in an authenticated page can perform actions as that user.
+
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
