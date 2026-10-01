@@ -22,7 +22,7 @@ Set `NEXT_PUBLIC_SUPABASE_URL` and either `NEXT_PUBLIC_SUPABASE_ANON_KEY` or `NE
 
 Apply the SQL migration in `supabase/migrations` to create the row-protected `profiles` table and the auth-user profile trigger.
 
-For production, enable CAPTCHA and configure auth rate limits in Supabase Auth settings. To enable Cloudflare Turnstile on password sign-in, signup, and confirmation resend, set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and configure the matching Turnstile secret in Supabase Auth. The public site key is safe to expose; never expose the Turnstile secret or a Supabase service-role/secret key.
+For production, configure auth rate limits in Supabase Auth settings. Never expose a Supabase service-role or secret key.
 
 Supabase Auth performs server-side email and password validation. The profile migration applies a database length constraint and own-row RLS policies. This repository defines only `profiles`; review every other table in the live database and enable RLS with table-specific policies. `@supabase/ssr` manages auth cookies, but XSS prevention is still required because script execution in an authenticated page can perform actions as that user.
 

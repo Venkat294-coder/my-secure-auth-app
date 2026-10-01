@@ -4,8 +4,6 @@ import { createClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
-import TurnstileWidget from '@/app/components/turnstile-widget';
-import { getTurnstileToken, isTurnstileEnabled, resetTurnstile } from '@/lib/turnstile';
 
 export default function Signup() {
     const [name, setName] = useState('');
@@ -26,14 +24,7 @@ export default function Signup() {
 
     const handleSignup = async (event) => {
         event.preventDefault();
-        const form = event.currentTarget;
-        const captchaToken = getTurnstileToken(form);
         setErrorMsg('');
-
-        if (isTurnstileEnabled() && !captchaToken) {
-            setErrorMsg('Complete the security check before creating your account.');
-            return;
-        }
 
         if (!name || !email || !password) {
             setErrorMsg('All fields are required!');
@@ -80,7 +71,6 @@ export default function Signup() {
                 options: {
                     data: { full_name: name },
                     emailRedirectTo: `${window.location.origin}/auth/callback`,
-                    captchaToken: captchaToken || undefined,
                 },
             });
 
@@ -113,19 +103,11 @@ export default function Signup() {
             setErrorMsg('⚠️ Network error. Please check your connection and try again.');
         } finally {
             setLoading(false);
-            if (isTurnstileEnabled()) resetTurnstile(form);
         }
     };
 
     const handleResendConfirmation = async (event) => {
         event.preventDefault();
-        const form = event.currentTarget;
-        const captchaToken = getTurnstileToken(form);
-        if (isTurnstileEnabled() && !captchaToken) {
-            setErrorMsg('Complete the security check before requesting another email.');
-            return;
-        }
-
         setLoading(true);
         try {
             const { error } = await supabase.auth.resend({
@@ -133,7 +115,6 @@ export default function Signup() {
                 email: confirmationEmail,
                 options: {
                     emailRedirectTo: `${window.location.origin}/auth/callback`,
-                    captchaToken: captchaToken || undefined,
                 },
             });
             if (error) {
@@ -146,7 +127,6 @@ export default function Signup() {
             setErrorMsg('Unable to resend the email right now. Please try again.');
         } finally {
             setLoading(false);
-            if (isTurnstileEnabled()) resetTurnstile(form);
         }
     };
 
@@ -185,7 +165,6 @@ export default function Signup() {
                             </p>
                             {errorMsg && <div className="auth-error" role="alert">{errorMsg}</div>}
                             <form onSubmit={handleResendConfirmation} className="auth-form">
-                                <TurnstileWidget />
                                 <button type="submit" disabled={loading} className="auth-primary">
                                     {loading ? 'Sending...' : 'Resend confirmation email'}
                                 </button>
@@ -203,7 +182,6 @@ export default function Signup() {
                             {errorMsg && <div className="auth-error" role="alert">{errorMsg}</div>}
 
                             <form onSubmit={handleSignup} className="auth-form">
-                                <TurnstileWidget />
                                 <div className="auth-field">
                                     <label className="auth-label" htmlFor="signup-name">Full name</label>
                                     <input

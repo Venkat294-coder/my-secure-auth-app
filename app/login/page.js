@@ -5,8 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
-import TurnstileWidget from '@/app/components/turnstile-widget';
-import { getTurnstileToken, isTurnstileEnabled, resetTurnstile } from '@/lib/turnstile';
 
 export default function LoginPage() {
     return (
@@ -30,20 +28,13 @@ function LoginForm() {
     // Handle Manual Email/Password Login
     const handleLogin = async (event) => {
         event.preventDefault();
-        const form = event.currentTarget;
-        const captchaToken = getTurnstileToken(form);
         setErrorMsg('');
-        if (isTurnstileEnabled() && !captchaToken) {
-            setErrorMsg('Complete the security check before signing in.');
-            return;
-        }
         setLoading(true);
 
         try {
             const { error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
-                options: { captchaToken: captchaToken || undefined },
             });
 
             if (error) {
@@ -62,7 +53,6 @@ function LoginForm() {
             setErrorMsg('Unable to sign in right now. Please try again.');
         } finally {
             setLoading(false);
-            if (isTurnstileEnabled()) resetTurnstile(form);
         }
     };
 
@@ -125,7 +115,6 @@ function LoginForm() {
                     )}
 
                     <form onSubmit={handleLogin} className="auth-form">
-                        <TurnstileWidget />
                         <div className="auth-field">
                             <label className="auth-label" htmlFor="login-email">Email address</label>
                             <input
