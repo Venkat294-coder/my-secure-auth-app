@@ -30,10 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env
-.env.local
-.env*.local
+# env files (keep only the placeholder template tracked)
+.env*
+!.env.example
 
 # Supabase CLI local project metadata
 /supabase/.temp/
