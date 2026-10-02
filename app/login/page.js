@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 import { toast } from 'react-toastify';
@@ -19,17 +19,30 @@ function LoginForm() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [loadingMethod, setLoadingMethod] = useState(null);
+    const loading = loadingMethod !== null;
 
     const router = useRouter();
     const searchParams = useSearchParams();
     const supabase = createClient();
+    const callbackError = searchParams.get('error') === 'google_cancelled'
+        ? 'Google sign-in was cancelled. Choose an account to continue, or sign in with your email.'
+        : 'We could not complete sign-in. Please try again. If this continues, contact support.';
+
+    useEffect(() => {
+        const handlePageShow = (event) => {
+            if (event.persisted) setLoadingMethod(null);
+        };
+        window.addEventListener('pageshow', handlePageShow);
+        return () => window.removeEventListener('pageshow', handlePageShow);
+    }, []);
 
     // Handle Manual Email/Password Login
     const handleLogin = async (event) => {
         event.preventDefault();
+        if (loading) return;
         setErrorMsg('');
-        setLoading(true);
+        setLoadingMethod('password');
 
         try {
             const { error } = await supabase.auth.signInWithPassword({
@@ -52,13 +65,17 @@ function LoginForm() {
         } catch {
             setErrorMsg('Unable to sign in right now. Please try again.');
         } finally {
-            setLoading(false);
+            setLoadingMethod(null);
         }
     };
 
     // Handle Google OAuth Login
     const handleGoogleLogin = async () => {
+        if (loading) return;
         setErrorMsg('');
+agent-of-working-correctly-2607
+        setLoadingMethod('google');
+
         const isEmbedded = window.self !== window.top;
         const authWindow = isEmbedded ? window.open('about:blank', '_blank') : null;
         if (isEmbedded && !authWindow) {
@@ -67,11 +84,25 @@ function LoginForm() {
         }
 
         setLoading(true);
+ main
         try {
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
                     redirectTo: `${window.location.origin}/auth/callback`,
+ agent-of-working-correctly-2607
+                    queryParams: {
+                        prompt: 'select_account',
+                    },
+                    skipBrowserRedirect: true,
+                },
+            });
+
+            if (error || !data?.url) {
+                setErrorMsg('Google sign-in is temporarily unavailable. Please try again.');
+                setLoadingMethod(null);
+                return;
+
                     queryParams: { prompt: 'select_account' },
                     skipBrowserRedirect: isEmbedded,
                 },
@@ -83,12 +114,14 @@ function LoginForm() {
             } else if (isEmbedded && data.url && authWindow) {
                 authWindow.opener = null;
                 authWindow.location.href = data.url;
+ main
             }
+
+            window.location.assign(data.url);
         } catch {
             authWindow?.close();
             setErrorMsg('Google sign-in is temporarily unavailable. Please try again.');
-        } finally {
-            setLoading(false);
+            setLoadingMethod(null);
         }
     };
 
@@ -124,7 +157,7 @@ function LoginForm() {
 
                     {(errorMsg || searchParams.has('error')) && (
                         <div className="auth-error" role="alert">
-                            {errorMsg || 'We could not complete sign-in. Please try again.'}
+                            {errorMsg || callbackError}
                         </div>
                     )}
 
@@ -177,7 +210,7 @@ function LoginForm() {
                         </div>
 
                         <button type="submit" disabled={loading} className="auth-primary">
-                            {loading ? 'Signing in...' : 'Sign in securely'}
+                            {loadingMethod === 'password' ? 'Signing in...' : 'Sign in securely'}
                         </button>
                     </form>
 
@@ -189,7 +222,7 @@ function LoginForm() {
                             <path fill="#FBBC05" d="M5.3 14.7c-.2-.7-.4-1.5-.4-2.7s.2-2 .4-2.7L1.6 6.4C.6 8.4 0 10.6 0 13s.6 4.6 1.6 6.6l3.7-2.9z" />
                             <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.9C6.2 7.1 8.9 5 12 5z" />
                         </svg>
-                        {loading ? 'Connecting...' : 'Continue with Google'}
+                        {loadingMethod === 'google' ? 'Connecting...' : 'Continue with Google'}
                     </button>
 
                     <p className="auth-footer">

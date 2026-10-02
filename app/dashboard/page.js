@@ -7,6 +7,7 @@ const supabase = createClient();
 
 export default function Dashboard() {
     const [userName, setUserName] = useState('');
+    const [userEmail, setUserEmail] = useState('');
     const [isCheckingSession, setIsCheckingSession] = useState(true);
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
     const [isSigningOut, setIsSigningOut] = useState(false);
@@ -27,8 +28,9 @@ export default function Dashboard() {
                     return;
                 }
 
-                const fullName = user.user_metadata?.full_name || user.user_metadata?.name || 'User';
+                const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email || 'Member';
                 setUserName(fullName);
+                setUserEmail(user.email || '');
                 setIsCheckingSession(false);
             } catch {
                 if (isCurrent) router.replace('/login');
@@ -86,7 +88,10 @@ export default function Dashboard() {
                     <div>
                         <span className="dashboard-eyebrow">ANCHOR / PRIVATE ACCESS</span>
                         <h1 className="dashboard-title">Welcome, {userName}.</h1>
-                        <p className="dashboard-description">Your secure space is ready. You are signed in and in control.</p>
+                        <p className="dashboard-description">
+                            {userEmail ? `Signed in as ${userEmail}. ` : ''}
+                            Your secure space is ready.
+                        </p>
                     </div>
                     <span className="dashboard-mark" aria-hidden="true">✳</span>
                 </div>
