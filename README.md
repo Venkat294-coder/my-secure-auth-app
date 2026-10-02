@@ -47,6 +47,16 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Deploy on Netlify
+
+Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the Netlify dashboard environment variables before deploying. The existing client also supports `NEXT_PUBLIC_SUPABASE_ANON_KEY` as a legacy alternative. Store actual values in the dashboard, not in tracked files; use `.env.local` only for local development. Only the placeholder `.env.example` is tracked.
+
+Next.js embeds `NEXT_PUBLIC_` values into browser bundles at build time, even when they are configured only in the dashboard. The Supabase project URL and publishable/anon keys are intentionally public client configuration, not privileged credentials. `netlify.toml` excludes only these three variable names from Netlify's environment-value secrets scan so their expected presence in build output does not block deployment. Secrets scanning remains enabled for all other variables and files; no paths are excluded.
+
+Never put a Supabase secret or service-role key into any `NEXT_PUBLIC_` variable or add it to the exclusions. Keep Row Level Security enabled with appropriate policies for client-accessible tables. If a genuine private credential was exposed, revoke or rotate it and remove it from tracked files and history.
+
+If a deploy still fails, inspect the scanner's reported variable names and file paths earlier in the deploy log. The provided log excerpt does not include those findings. Confirm that the resolved `SECRETS_SCAN_OMIT_KEYS` contains the three names in `netlify.toml`, and review any context-specific configuration overrides. Do not disable scanning or exclude entire build directories to suppress unrelated findings.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
