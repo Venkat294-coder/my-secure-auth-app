@@ -59,19 +59,33 @@ function LoginForm() {
     // Handle Google OAuth Login
     const handleGoogleLogin = async () => {
         setErrorMsg('');
+        const isEmbedded = window.self !== window.top;
+        const authWindow = isEmbedded ? window.open('about:blank', '_blank') : null;
+        if (isEmbedded && !authWindow) {
+            setErrorMsg('Allow pop-ups for this preview, then try Google sign-in again.');
+            return;
+        }
+
         setLoading(true);
         try {
-            const { error } = await supabase.auth.signInWithOAuth({
+            const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
                     redirectTo: `${window.location.origin}/auth/callback`,
+                    queryParams: { prompt: 'select_account' },
+                    skipBrowserRedirect: isEmbedded,
                 },
             });
 
             if (error) {
+                authWindow?.close();
                 setErrorMsg('Google sign-in is temporarily unavailable. Please try again.');
+            } else if (isEmbedded && data.url && authWindow) {
+                authWindow.opener = null;
+                authWindow.location.href = data.url;
             }
         } catch {
+            authWindow?.close();
             setErrorMsg('Google sign-in is temporarily unavailable. Please try again.');
         } finally {
             setLoading(false);
