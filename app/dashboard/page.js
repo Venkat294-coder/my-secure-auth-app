@@ -3,8 +3,6 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
-const supabase = createClient();
-
 export default function Dashboard() {
     const [userName, setUserName] = useState('');
     const [userEmail, setUserEmail] = useState('');
@@ -20,6 +18,7 @@ export default function Dashboard() {
 
         async function getUserData() {
             try {
+                const supabase = createClient();
                 const { data: { user }, error } = await supabase.auth.getUser();
                 if (!isCurrent) return;
 
@@ -46,6 +45,7 @@ export default function Dashboard() {
     const handleLogout = async () => {
         setIsSigningOut(true);
         try {
+            const supabase = createClient();
             const { error } = await supabase.auth.signOut({ scope: 'global' });
 
             if (error) {

@@ -1,12 +1,14 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import { getSupabaseConfig } from '@/lib/supabase-config';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
 export async function proxy(request) {
     let supabaseResponse = NextResponse.next({ request });
 
     const { supabaseUrl, supabaseKey } = getSupabaseConfig();
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
+        global: { fetch: fetchWithTimeout },
         cookies: {
             getAll() { return request.cookies.getAll(); },
             setAll(cookiesToSet) {
@@ -17,8 +19,7 @@ export async function proxy(request) {
                 );
             },
         },
-    }
-    );
+    });
 
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -37,5 +38,5 @@ export async function proxy(request) {
 }
 
 export const config = {
-    matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+    matcher: ['/dashboard/:path*'],
 };

@@ -34,6 +34,14 @@ Google sign-in requests an account chooser instead of silently selecting a saved
 
 Supabase Auth performs server-side email and password validation. The profile migration applies a database length constraint and own-row RLS policies. This repository defines only `profiles`; review every other table in the live database and enable RLS with table-specific policies. `@supabase/ssr` manages auth cookies, but XSS prevention is still required because script execution in an authenticated page can perform actions as that user.
 
+## Runtime and database scaling
+
+The browser Supabase client is initialized lazily and reused for the lifetime of the browser module. Browser and server Supabase requests have a 15-second timeout; auth forms show retryable errors and callback failures return users to sign-in. The Next.js proxy performs its auth lookup only for protected dashboard paths, not public pages or static assets. The OAuth callback creates its server client per request because its cookie adapter is request-specific. Do not share server clients across users or disable session persistence: this app relies on cookie-backed sessions to complete sign-in.
+
+There are currently no application table reads, `.select()` calls, filters, ordering chains, or list endpoints to paginate. The `profiles.id` column is a primary key, so PostgreSQL already creates its lookup index. No additional query index or pagination migration is justified by the current code. Reassess selected columns, page sizes, and indexes when adding data-backed lists or filters.
+
+Code changes alone cannot guarantee 10,000 concurrent users. Validate Netlify concurrency/function limits, Supabase Auth and API rate limits, database connection limits, and the deployed app with a representative load test before setting that target.
+
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

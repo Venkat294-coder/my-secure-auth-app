@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 
+const disposableEmailDomains = new Set([
+    'tempmail.com', '10minutemail.com', 'mailinator.com',
+    'guerrillamail.com', 'trashmail.com', 'yopmail.com',
+    'sharklasers.com', 'getnada.com', 'dispostable.com'
+]);
+
 export default function Signup() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -14,13 +20,6 @@ export default function Signup() {
     const [loading, setLoading] = useState(false); // Loading state tracker
     const [confirmationEmail, setConfirmationEmail] = useState('');
     const router = useRouter();
-    const supabase = createClient();
-
-    const disposableEmailDomains = [
-        'tempmail.com', '10minutemail.com', 'mailinator.com',
-        'guerrillamail.com', 'trashmail.com', 'yopmail.com',
-        'sharklasers.com', 'getnada.com', 'dispostable.com'
-    ];
 
     const handleSignup = async (event) => {
         event.preventDefault();
@@ -33,7 +32,7 @@ export default function Signup() {
 
         // Check Disposable Email Restriction
         const emailDomain = email.split('@')[1]?.toLowerCase();
-        if (disposableEmailDomains.includes(emailDomain)) {
+        if (disposableEmailDomains.has(emailDomain)) {
             setErrorMsg('⚠️ Temporary or disposable email addresses are not allowed!');
             return;
         }
@@ -65,6 +64,7 @@ export default function Signup() {
         try {
             // Await Supabase network request safely before proceeding
             const normalizedEmail = email.trim().toLowerCase();
+            const supabase = createClient();
             const { data, error } = await supabase.auth.signUp({
                 email: normalizedEmail,
                 password,
@@ -110,6 +110,7 @@ export default function Signup() {
         event.preventDefault();
         setLoading(true);
         try {
+            const supabase = createClient();
             const { error } = await supabase.auth.resend({
                 type: 'signup',
                 email: confirmationEmail,

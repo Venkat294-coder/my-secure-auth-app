@@ -24,6 +24,7 @@ function LoginForm() {
 
     const router = useRouter();
     const searchParams = useSearchParams();
+<<<<<<< HEAD
     const supabase = createClient();
     const callbackError = searchParams.get('error') === 'google_cancelled'
         ? 'Google sign-in was cancelled. Choose an account to continue, or sign in with your email.'
@@ -36,6 +37,8 @@ function LoginForm() {
         window.addEventListener('pageshow', handlePageShow);
         return () => window.removeEventListener('pageshow', handlePageShow);
     }, []);
+=======
+>>>>>>> 8ceab9e (Optimize app performance)
 
     // Handle Manual Email/Password Login
     const handleLogin = async (event) => {
@@ -45,6 +48,7 @@ function LoginForm() {
         setLoadingMethod('password');
 
         try {
+            const supabase = createClient();
             const { error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
@@ -84,6 +88,7 @@ function LoginForm() {
         }
 
         try {
+            const supabase = createClient();
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
